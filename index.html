@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ល្បឿន និងវ៉ិចទ័រល្បឿន (Quiz 1)</title>
+    <script>MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']] } };</script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>
+        body { font-family: 'Hanuman', 'Siemreap', Arial, sans-serif; background-color: #f0f8ff; /* ពណ៌សផ្ទៃមេឃ */ padding: 20px; color: #111; text-align: center; margin: 0; }
+        .tab-container { display: flex; justify-content: center; margin-bottom: 20px; background: #1e293b; padding: 10px; border-radius: 8px; max-width: 900px; margin: 0 auto 20px;}
+        .tab-btn { background: #334155; color: #cbd5e1; border: none; padding: 10px 20px; margin: 0 5px; font-size: 16px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-family: inherit; font-weight: bold;}
+        .tab-btn.active { background: #38bdf8; color: #0f172a; }
+        .tab-btn.quiz-active { background: #2ecc71; color: white; }
+        .tab-content { display: none; max-width: 900px; margin: 0 auto; }
+        .tab-content.active { display: block; }
+        
+        /* Sim Styles */
+        .problem-statement { background: #fff3cd; color: #664d03; padding: 18px 25px; border-radius: 8px; border-left: 6px solid #ffc107; text-align: left; margin-bottom: 20px; font-size: 17px; font-weight: bold; line-height: 1.8; box-shadow: 0 3px 6px rgba(0,0,0,0.08); }
+        .sim-area { position: relative; width: 100%; height: auto; background: #e0f7fa; border: 2px solid #b0bec5; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 0 auto 20px; display: block; }
+        svg { display: block; width: 100%; height: auto; max-height: 350px; margin: 0 auto; }
+        
+        /* CSS សម្រាប់បង្វិលក្បាលឡានត្រឹមត្រូវ */
+        #carEmoji {
+            transform-origin: center;
+            transform-box: fill-box;
+            display: inline-block;
+        }
+
+        .controls-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
+        .btn-group button { color: white; padding: 12px 24px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; transition: 0.3s; }
+        .btn-go { background: #28a745; } .btn-back { background: #e65100; } .btn-reset { background: #6c757d; }
+        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .data-box { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 3px 6px rgba(0,0,0,0.12); text-align: center; font-size: 16px; font-weight: bold; color: #333; }
+        .data-box span { font-weight: 900; font-size: 26px; display: block; margin-top: 8px; font-family: 'Arial', sans-serif; }
+        .solution-box { background: #e2e8f0; padding: 25px; border-radius: 8px; text-align: left; margin-top: 25px; border-left: 6px solid #4a5568; font-size: 17px; line-height: 1.8; overflow-x: auto; }
+        .solution-box h3 { margin-top: 0; color: #2d3748; border-bottom: 2px solid #cbd5e0; padding-bottom: 10px;}
+        
+        /* Quiz Styles */
+        #quiz-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: left;}
+        .student-info { background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .student-info select { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-family: inherit; font-size: 16px;}
+        .question-block { background: #fdfbfb; padding: 15px; border-left: 4px solid #3498db; margin-bottom: 15px; border-radius: 5px; }
+        .question-block p { font-weight: bold; margin-top: 0; }
+        .question-block label { display: block; margin-bottom: 8px; cursor: pointer; padding: 5px;}
+        .question-block label:hover {background: #e2e8f0; border-radius: 4px;}
+        .submit-btn { background: #2ecc71; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; font-weight: bold; border-radius: 5px; cursor: pointer; font-family: inherit;}
+        .submit-btn:hover { background: #27ae60; }
+        .submit-btn:disabled { background: #95a5a6; cursor: not-allowed; }
+        
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-box { background: white; padding: 30px; border-radius: 12px; text-align: center; width: 90%; max-width: 400px; }
+        .modal-box h3 { color: #2ecc71; margin-top: 0;}
+        .modal-btn { background: #3498db; color: white; border: none; padding: 10px 30px; font-size: 16px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight:bold;}
+    </style>
+</head>
+<body>
+    <div class="tab-container">
+        <button class="tab-btn active" onclick="openTab(event, 'sim-tab')">១. ការពិសោធន៍ល្បឿន</button>
+        <button class="tab-btn" onclick="openTab(event, 'quiz-tab')">២. កម្រងសំណួរ (Quiz ១)</button>
+    </div>
+
+    <!-- ផ្នែកទី១: ពិសោធន៍ -->
+    <div id="sim-tab" class="tab-content active">
+        <div class="problem-statement">
+            <strong>មេរៀនទី៣៖ ល្បឿន និងវ៉ិចទ័រល្បឿន</strong><br>
+            • <strong>ល្បឿនមធ្យម ($\bar{v}$):</strong> គិតលើ "ចម្ងាយចរសរុប ($d$)" ធៀបនឹងរយៈពេល ($\bar{v} = \frac{d}{t}$)<br>
+            • <strong>វ៉ិចទ័រល្បឿនមធ្យម ($v_{av}$):</strong> គិតលើ "បម្លាស់ទីសរុប ($\Delta x = x_2 - x_1$)" ធៀបនឹងរយៈពេល។ កាលណាត្រលប់ក្រោយ បម្លាស់ទីអាចតូចជាងចម្ងាយចរ!
+        </div>
+        
+        <div class="sim-area">
+            <svg viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet">
+                <!-- ផ្លូវ -->
+                <rect x="50" y="140" width="800" height="40" fill="#7f8c8d" rx="5"/>
+                <line x1="70" y1="160" x2="830" y2="160" stroke="#fff" stroke-width="4" stroke-dasharray="15,10"/>
+                
+                <!-- មាត្រដ្ឋាន (Scale 0 ដល់ 10 km) -->
+                <g id="ruler">
+                    <line x1="50" y1="180" x2="50" y2="195" stroke="#111" stroke-width="2"/>
+                    <text x="45" y="215" font-family="Arial" font-weight="bold">0</text>
+                    <text x="40" y="235" font-family="Arial" font-size="12">ទីតាំងដើម</text>
+
+                    <line x1="450" y1="180" x2="450" y2="195" stroke="#111" stroke-width="2"/>
+                    <text x="445" y="215" font-family="Arial" font-weight="bold">5</text>
+
+                    <line x1="850" y1="180" x2="850" y2="195" stroke="#111" stroke-width="2"/>
+                    <text x="840" y="215" font-family="Arial" font-weight="bold">10 km</text>
+                </g>
+
+                <!-- ឡាន (ប្រើ scaleX ដើម្បីបង្វិលក្បាល) -->
+                <text id="carEmoji" x="50" y="130" font-size="45" text-anchor="middle">🚗</text>
+
+                <!-- បន្ទាត់បង្ហាញ d និង Δx -->
+                <g id="vectors" style="display: none;">
+                    <line id="vecD" x1="50" y1="60" x2="50" y2="60" stroke="#007bff" stroke-width="4" stroke-dasharray="5,5"/>
+                    <text id="lblD" x="50" y="50" font-family="Arial" font-weight="bold" fill="#007bff">ចម្ងាយចរ d</text>
+
+                    <line id="vecDx" x1="50" y1="90" x2="50" y2="90" stroke="#d32f2f" stroke-width="4"/>
+                    <polygon id="headDx" points="50,85 60,90 50,95" fill="#d32f2f"/>
+                    <text id="lblDx" x="50" y="85" font-family="Arial" font-weight="bold" fill="#d32f2f">បម្លាស់ទី Δx</text>
+                </g>
+            </svg>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-go" id="btnGo">▶ បើកទៅមុខ (10 km)</button>
+            <button class="btn-back" id="btnBack" disabled>◀ បើកត្រលប់ក្រោយ (4 km)</button>
+            <button class="btn-reset" id="btnReset">🔄 ត្រឡប់ដើម</button>
+        </div>
+
+        <div class="dashboard">
+            <div class="data-box" style="border-top: 4px solid #333;">ពេលវេលា $t$<br><span id="dashT" style="color:#333;">0.00 h</span></div>
+            <div class="data-box" style="border-top: 4px solid #007bff;">ចម្ងាយចរសរុប $d$<br><span id="dashD" style="color:#007bff;">0.0 km</span></div>
+            <div class="data-box" style="border-top: 4px solid #d32f2f;">បម្លាស់ទីសរុប $\Delta x$<br><span id="dashDx" style="color:#d32f2f;">0.0 km</span></div>
+        </div>
+
+        <div class="solution-box" id="solutionBox" style="display: none;">
+            <h3>ការគណនាល្បឿនផ្អែកលើការពិសោធន៍</h3>
+            <div id="mathContainer">
+                <p><strong>១. ល្បឿនមធ្យម ($\bar{v}$):</strong> គិតលើចម្ងាយចរសរុបដែលបានធ្វើដំណើរ</p>
+                <div id="mathV">$$\bar{v} = \frac{d}{t} = \frac{14.0 \text{ km}}{0.40 \text{ h}} = 35 \text{ km/h}$$</div>
+                
+                <p><strong>២. វ៉ិចទ័រល្បឿនមធ្យម ($v_{av}$):</strong> គិតត្រឹមបម្លាស់ទី (ទីតាំងចុងក្រោយ - ទីតាំងដើម)</p>
+                <div id="mathVav">$$v_{av} = \frac{\Delta x}{\Delta t} = \frac{6.0 \text{ km}}{0.40 \text{ h}} = 15 \text{ km/h}$$</div>
+                
+                <p style="color:#d32f2f;">💡 <strong>ចំណាំ៖</strong> ដោយសារឡានត្រលប់ក្រោយ បម្លាស់ទី ($6\text{km}$) តូចជាងចម្ងាយចរសរុប ($14\text{km}$) ធ្វើឱ្យវ៉ិចទ័រល្បឿនមធ្យមតូចជាងល្បឿនមធ្យម។</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ផ្នែកទី២: Quiz -->
+    <div id="quiz-tab" class="tab-content">
+        <div id="quiz-container">
+            <h2 style="text-align: center; color: #2c3e50;">កម្រងសំណួរទី១៖ ល្បឿន និងវ៉ិចទ័រល្បឿន</h2>
+            <div class="student-info">
+                <label><b>ជ្រើសរើសឈ្មោះ៖</b></label>
+                <select id="nameSelect">
+                    <option value="">-- សូមជ្រើសរើសឈ្មោះរបស់អ្នក --</option>
+                    <option value="អ៊ី មួយលី">អ៊ី មួយលី</option>
+                    <option value="ម៊ុយ សេងអាន">ម៊ុយ សេងអាន</option>
+                    <option value="អ៊ីលី វ៉ឺនន័រ">អ៊ីលី វ៉ឺនន័រ</option>
+                    <option value="ម៊េង ហេង">ម៊េង ហេង</option>
+                    <option value="វរៈយុទ្ធ">វរៈយុទ្ធ</option>
+                </select>
+            </div>
+            
+            <div class="question-block">
+                <p>១. តើ "ចម្ងាយចរ" និង "បម្លាស់ទី" ដូចគ្នាឬទេ នៅពេលរថយន្តធ្វើចលនាវាង ឬត្រលប់ក្រោយ?</p>
+                <label><input type="radio" name="q1" value="0"> ក. ដូចគ្នា</label>
+                <label><input type="radio" name="q1" value="10"> ខ. ខុសគ្នា (បម្លាស់ទីតូចជាងចម្ងាយចរ)</label>
+                <label><input type="radio" name="q1" value="0"> គ. ខុសគ្នា (បម្លាស់ទីធំជាងចម្ងាយចរ)</label>
+            </div>
+            <div class="question-block">
+                <p>២. រូបមន្តគណនា "វ៉ិចទ័រល្បឿនមធ្យម" ($v_{av}$) គឺអ្វី?</p>
+                <label><input type="radio" name="q2" value="0"> ក. $\bar{v} = \frac{d}{t}$</label>
+                <label><input type="radio" name="q2" value="10"> ខ. $v_{av} = \frac{\Delta x}{\Delta t}$</label>
+                <label><input type="radio" name="q2" value="0"> គ. $v = d \times t$</label>
+            </div>
+            <div class="question-block">
+                <p>៣. រថយន្តមួយទៅមុខ ១០គ.ម ហើយត្រលប់ក្រោយមកកន្លែងដើមវិញ។ តើបម្លាស់ទី $\Delta x$ ស្មើប៉ុន្មាន?</p>
+                <label><input type="radio" name="q3" value="10"> ក. 0 km</label>
+                <label><input type="radio" name="q3" value="0"> ខ. 10 km</label>
+                <label><input type="radio" name="q3" value="0"> គ. 20 km</label>
+            </div>
+            <div class="question-block">
+                <p>៤. បើរថយន្តទៅមុខ ១០គ.ម ក្នុងរយៈពេល ០.៤ម៉ោង តើល្បឿនមធ្យមស្មើប៉ុន្មាន?</p>
+                <label><input type="radio" name="q4" value="0"> ក. 4 km/h</label>
+                <label><input type="radio" name="q4" value="10"> ខ. 25 km/h</label>
+                <label><input type="radio" name="q4" value="0"> គ. 40 km/h</label>
+            </div>
+            <div class="question-block">
+                <p>៥. តើវ៉ិចទ័រល្បឿនអាចមានតម្លៃអវិជ្ជមាន (-) ដែរឬទេ?</p>
+                <label><input type="radio" name="q5" value="10"> ក. អាច (បញ្ជាក់ពីទិសដៅផ្ទុយ)</label>
+                <label><input type="radio" name="q5" value="0"> ខ. មិនអាចទេ ត្រូវតែវិជ្ជមានជានិច្ច</label>
+                <label><input type="radio" name="q5" value="0"> គ. មានតែចម្ងាយចរទេទើបអាចអវិជ្ជមាន</label>
+            </div>
+            <button id="submitBtn" class="submit-btn" onclick="submitQuiz()">បញ្ជូនចម្លើយទៅកាន់គ្រូ</button>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="successModal" class="modal-overlay"><div class="modal-box"><h3>✅ ជោគជ័យ!</h3><p id="modalMessage"></p><button class="modal-btn" onclick="closeModal()">OK (បិទផ្ទាំង)</button></div></div>
+
+    <script>
+        function openTab(evt, tabName) {
+            document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
+            document.querySelectorAll(".tab-btn").forEach(el => { el.classList.remove("active"); el.classList.remove("quiz-active"); });
+            document.getElementById(tabName).style.display = "block";
+            if(tabName === 'quiz-tab') evt.currentTarget.classList.add("quiz-active");
+            else evt.currentTarget.classList.add("active");
+        }
+        
+        function showModal(msg) { document.getElementById("modalMessage").innerText = msg; document.getElementById("successModal").style.display = "flex"; }
+        function closeModal() { document.getElementById("successModal").style.display = "none"; }
+
+        function submitQuiz() {
+            let name = document.getElementById('nameSelect').value;
+            if (!name) return alert("សូមជ្រើសរើសឈ្មោះរបស់អ្នក!");
+            let score = 0, count = 0;
+            for (let i = 1; i <= 5; i++) {
+                let rad = document.getElementsByName('q' + i);
+                for (let r of rad) if (r.checked) { score += parseInt(r.value); count++; break; }
+            }
+            if (count < 5) return alert("សូមឆ្លើយសំណួរឱ្យបានគ្រប់ទាំង ៥!");
+            
+            let btn = document.getElementById('submitBtn'); 
+            btn.innerText = "កំពុងបញ្ជូន..."; btn.disabled = true; // បិទមិនឱ្យចុចពីរដង
+            
+            // ⚠️ ដាក់ Web App URL ថ្មីនៅទីនេះ ⚠️
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbxkkWsPZfHv0ssDtrsr94YTXhKCrHf7Bqus9CKNpKRj9tlYXkCTlHGihAbmnls7EJO1/exec';
+            let fd = new URLSearchParams();
+            
+            // កំណត់ SheetName ជា "Sheet1" និងបញ្ចូលពិន្ទុទៅក្នុង "ពិន្ទុខែតុលា"
+            fd.append("sheetName", "Sheet1"); 
+            fd.append("name", name); 
+            fd.append("score", score); 
+            fd.append("quizNumber", "ពិន្ទុខែតុលា"); // ចូលពិន្ទុខែតុលា
+
+            if(scriptURL.includes('YOUR_GOOGLE')) {
+                alert("សូមដាក់ Web App URL នៅក្នុងកូដជាមុនសិន!");
+                btn.innerText = "បញ្ជូនចម្លើយទៅកាន់គ្រូ"; btn.disabled = false; return;
+            }
+            fetch(scriptURL, { method: "POST", body: fd })
+            .then(r => r.text()).then(res => {
+                if(res === "Success") {
+                    // លោតតែសារជោគជ័យ មិនបង្ហាញពិន្ទុ
+                    showModal(`កិច្ចការរបស់អ្នកត្រូវបានបញ្ជូនទៅលោកគ្រូរួចរាល់ដោយជោគជ័យ!`);
+                    btn.innerText = "បានបញ្ជូនរួចរាល់ ✅"; // រក្សាការបិទប៊ូតុង
+                } else {
+                    alert("មានបញ្ហា៖ " + res);
+                    btn.innerText = "បញ្ជូនចម្លើយទៅកាន់គ្រូ"; btn.disabled = false;
+                }
+            }).catch(err => { 
+                alert("មានបញ្ហាបណ្តាញទាក់ទង!"); 
+                btn.innerText = "បញ្ជូនចម្លើយទៅកាន់គ្រូ"; btn.disabled = false; 
+            });
+        }
+
+        // --- SIMULATION LOGIC ---
+        var car = document.getElementById('carEmoji'), vectors = document.getElementById('vectors'), vecD = document.getElementById('vecD'), lblD = document.getElementById('lblD'), vecDx = document.getElementById('vecDx'), lblDx = document.getElementById('lblDx'), headDx = document.getElementById('headDx');
+        var dashT = document.getElementById('dashT'), dashD = document.getElementById('dashD'), dashDx = document.getElementById('dashDx'), solutionBox = document.getElementById('solutionBox');
+        var btnGo = document.getElementById('btnGo'), btnBack = document.getElementById('btnBack'), btnReset = document.getElementById('btnReset');
+        
+        var xStart = 50, pxPerKm = 80; // 1km = 80px
+        var pos = 0, dist = 0, time = 0; // km, h
+        var animFrame; var state = 0; // 0=start, 1=going, 2=reached10, 3=backing, 4=done
+
+        function updateUI() {
+            var deltaX = pos * pxPerKm;
+            
+            // Emoji ឡាន (🚗) ទម្រង់ដើមបែរមុខទៅឆ្វេង។ ដូច្នេះ:
+            // ពេលទៅមុខ (state 0, 1, 2) ត្រូវបង្វិលក្បាលទៅស្តាំប្រើ scaleX(-1)
+            // ពេលថយក្រោយ (state 3) ប្រើក្បាលដើម scaleX(1)
+            if (state === 3) {
+                car.style.transform = `translateX(${deltaX}px) scaleX(1)`;
+            } else {
+                car.style.transform = `translateX(${deltaX}px) scaleX(-1)`;
+            }
+
+            dashT.innerText = time.toFixed(2) + " h";
+            dashD.innerText = dist.toFixed(1) + " km";
+            dashDx.innerText = pos.toFixed(1) + " km";
+
+            if (state > 0) {
+                vectors.style.display = "block";
+                var dPx = xStart + (dist * pxPerKm);
+                vecD.setAttribute("x2", dPx); lblD.setAttribute("x", xStart + (dPx - xStart)/2 - 30);
+                
+                var dxPx = xStart + (pos * pxPerKm);
+                if (pos > 0) {
+                    vecDx.setAttribute("x2", dxPx); lblDx.setAttribute("x", xStart + (dxPx - xStart)/2 - 30);
+                    headDx.setAttribute("points", `${dxPx},85 ${dxPx+10},90 ${dxPx},95`);
+                } else {
+                    vecDx.setAttribute("x2", xStart);
+                }
+            } else { vectors.style.display = "none"; }
+        }
+
+        btnGo.addEventListener('click', function() {
+            if(state !== 0) return;
+            state = 1; btnGo.disabled = true; btnReset.disabled = true;
+            function drive() {
+                pos += 0.2; dist += 0.2; time += (0.4/14)*0.2; // សមាមាត្រតាមលំហាត់ t=0.40h សម្រាប់ 14km
+                updateUI();
+                if(pos < 10) requestAnimationFrame(drive);
+                else { pos = 10; state = 2; btnBack.disabled = false; btnReset.disabled = false; updateUI(); }
+            }
+            drive();
+        });
+
+        btnBack.addEventListener('click', function() {
+            if(state !== 2) return;
+            state = 3; btnBack.disabled = true; btnReset.disabled = true;
+            function driveBack() {
+                pos -= 0.2; dist += 0.2; time += (0.4/14)*0.2; 
+                updateUI();
+                if(pos > 6) requestAnimationFrame(driveBack); // 10km - 4km = 6km
+                else { pos = 6; dist = 14; time = 0.40; state = 4; btnReset.disabled = false; updateUI(); solutionBox.style.display = "block"; }
+            }
+            driveBack();
+        });
+
+        btnReset.addEventListener('click', function() {
+            state = 0; pos = 0; dist = 0; time = 0;
+            btnGo.disabled = false; btnBack.disabled = true; solutionBox.style.display = "none";
+            updateUI(); // នឹងកំណត់ transform ត្រលប់ទៅដើមវិញដោយស្វ័យប្រវត្តិ
+        });
+        
+        // Setup initial position
+        updateUI();
+    </script>
+</body>
+</html>
